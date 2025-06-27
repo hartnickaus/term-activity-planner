@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Term Activity Planner</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f4f4f4; }
+    input[type="text"] { width: 100%; }
+  </style>
+</head>
+<body>
+  <h1>Term Activity Planner</h1>
+  <p>Track your academic term activities.</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Week</th>
+        <th>Date</th>
+        <th>Activity</th>
+      </tr>
+    </thead>
+    <tbody id="planner-body">
+      <!-- Rows will go here -->
+    </tbody>
+  </table>
+  <button onclick="addRow()">Add Row</button>
+
+  <script>
+    function addRow() {
+      const tbody = document.getElementById('planner-body');
+      const row = document.createElement('tr');
+
+      for (let i = 0; i < 3; i++) {
+        const cell = document.createElement('td');
+        const input = document.createElement('input');
+        input.type = 'text';
+        cell.appendChild(input);
+        row.appendChild(cell);
+      }
+
+      tbody.appendChild(row);
+    }
+
+    // Add 12 starter rows
+    for (let i = 1; i <= 12; i++) addRow();
+  </script>
+</body>
+</html>
