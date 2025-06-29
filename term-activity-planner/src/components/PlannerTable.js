@@ -149,8 +149,16 @@ function PlannerTable({ startDate, endDate, stdDOW, startTime, endTime, loadedRo
   };
 
   const saveAsExcel = async () => {
+
+    // Load up images
+    const logoImageBuffer = await fetch("/logo192.png")
+      .then(res => res.arrayBuffer())
+      .then(buffer => new Uint8Array(buffer));
+    
+    // set some excel constants
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Planner");
+
 
     // Human summary rows
     const summary1 = `Overview for ${meta.group} for ${meta.term} with a theme of ${meta.theme}`;
@@ -165,6 +173,17 @@ function PlannerTable({ startDate, endDate, stdDOW, startTime, endTime, loadedRo
 
     const summaryCell2 = sheet.getCell("A2")
     summaryCell2.value = summary2;
+
+    // Add ScoutLogo
+    const imageId = workbook.addImage({
+      buffer: logoImageBuffer,
+      extension: "png",
+    });
+
+    sheet.addImage(imageId, {
+      tl: { col: 0, row: 0 },
+      ext: { width: 120, height: 120 },
+    });
 
     // Header row
     const headers = ["Start Date", "End Date", "Activity Name", "Lead", "Assist", "Notes", "Challenge Area", "RA", "OOH", "EB"];
