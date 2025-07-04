@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 
+import scoutLogo from "../images/ScoutLogo.png"; // Path may vary
+
 function generateWeeklyDates(startDate, endDate, stdDOW) {
   const result = [];
 
@@ -149,23 +151,44 @@ function PlannerTable({ startDate, endDate, stdDOW, startTime, endTime, loadedRo
   };
 
   const saveAsExcel = async () => {
-
-    // Load up images
-    const logoImageBuffer = await fetch("/logo192.png")
-      .then(res => res.arrayBuffer())
-      .then(buffer => new Uint8Array(buffer));
-    
     // set some excel constants
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Planner");
 
+    // 👇 Fetch image and convert to base64
+    try {
+      const response = await fetch(scoutLogo); // scoutLogo = "/images/ScoutLogo.png" or imported path
+      const blob = await response.blob();
+      const reader = new FileReader();
 
+      const base64data = await new Promise((resolve, reject) => {
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob); // this triggers onloadend
+      });
+
+      // 👇 Add image to workbook
+      const imageId = workbook.addImage({
+        base64: base64data,
+        extension: "png",
+      });
+
+      sheet.addImage(imageId, {
+        tl: { col: 0, row: 0 },
+        ext: { width: 80, height: 80 },
+      });
+
+      sheet.getRow(1).height = 90;
+    } catch (err) {
+      console.error("Failed to load image:", err);
+    }
+    
     // Human summary rows
     const summary1 = `Overview for ${meta.group} for ${meta.term} with a theme of ${meta.theme}`;
     const summary2 = `Weekly Nights are set as ${stdDOW?.slice(0, 3)} ${startTime} to ${endTime}`;
-    sheet.mergeCells("A1", "J1");
+    sheet.mergeCells("B1", "J1");
     sheet.mergeCells("A2", "J2");
-    const summaryCell = sheet.getCell("A1");
+    const summaryCell = sheet.getCell("B1");
     summaryCell.value = summary1;
     summaryCell.font = { bold: true, size: 14 };
     summaryCell.alignment = { vertical: "middle", horizontal: "center" };
@@ -174,16 +197,6 @@ function PlannerTable({ startDate, endDate, stdDOW, startTime, endTime, loadedRo
     const summaryCell2 = sheet.getCell("A2")
     summaryCell2.value = summary2;
 
-    // Add ScoutLogo
-    const imageId = workbook.addImage({
-      buffer: logoImageBuffer,
-      extension: "png",
-    });
-
-    sheet.addImage(imageId, {
-      tl: { col: 0, row: 0 },
-      ext: { width: 120, height: 120 },
-    });
 
     // Header row
     const headers = ["Start Date", "End Date", "Activity Name", "Lead", "Assist", "Notes", "Challenge Area", "RA", "OOH", "EB"];
@@ -239,7 +252,8 @@ function PlannerTable({ startDate, endDate, stdDOW, startTime, endTime, loadedRo
 
     // Export
     const buf = await workbook.xlsx.writeBuffer();
-    saveAs(new Blob([buf]), "Term-Activity-Planner.xlsx");
+    const blobExcel  = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    saveAs(blobExcel , "Term-Activity-Planner.xlsx");
   };
 
   return (
